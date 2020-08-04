@@ -96,36 +96,47 @@ Future<List<Hora>> findLinhas(Controller controller, String txt) async {
   }
 }
 
-Future<List<Hora>> findHours(Hora linha) async {
-  try {
-    final Response response = await client
-        .get(
-            'http://jocelidevops.000webhostapp.com/api/index.php?linha=${linha.linha}&sentido=${linha.sentido}')
-        .timeout(const Duration(seconds: 5));
+Future<List<Hora>> findHours(Hora linha, Controller controller) async {
+  if (controller.lista2.length > 0 &&
+      linha.linha == controller.linha &&
+      linha.sentido == controller.sentido) {
+    List<Hora> lista = controller.lista2;
+    return lista;
+  } else {
+    try {
+      controller.linha = linha.linha;
+      controller.sentido = linha.sentido;
+      controller.reseta();
+      final Response response = await client
+          .get(
+              'http://jocelidevops.000webhostapp.com/api/index.php?linha=${linha.linha}&sentido=${linha.sentido}')
+          .timeout(const Duration(seconds: 5));
 
-    final List<dynamic> fromJson = jsonDecode(response.body);
-    final List<Hora> lista = List();
+      final List<dynamic> fromJson = jsonDecode(response.body);
+      final List<Hora> lista = List();
+      print('STATUS ${response.statusCode}');
 
-    for (Map<String, dynamic> element in fromJson) {
-      final Hora hora = Hora(
-        id: element['id'],
-        linha: element['linha'],
-        horarioLargada: element['horario_largada'],
-        sigla: element['sigla'],
-        sentido: element['sentido'],
-      );
+      for (Map<String, dynamic> element in fromJson) {
+        final Hora hora = Hora(
+          id: element['id'],
+          linha: element['linha'],
+          horarioLargada: element['horario_largada'],
+          sigla: element['sigla'],
+          sentido: element['sentido'],
+        );
+        controller.lista2.add(hora);
+        lista.add(hora);
+      }
 
-      lista.add(hora);
+      return lista;
+    } on TimeoutException catch (e) {
+      print('Timeout');
+      final List<Hora> lista = List();
+      return lista;
+    } on Error catch (e) {
+      print('Error: $e');
+      final List<Hora> lista = List();
+      return lista;
     }
-
-    return lista;
-  } on TimeoutException catch (e) {
-    print('Timeout');
-    final List<Hora> lista = List();
-    return lista;
-  } on Error catch (e) {
-    print('Error: $e');
-    final List<Hora> lista = List();
-    return lista;
   }
 }

@@ -1,4 +1,4 @@
-package br.com.yoBus.app
+package com.example.yoBus
 
 import io.flutter.embedding.android.FlutterActivity
 

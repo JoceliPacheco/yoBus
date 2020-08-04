@@ -4,12 +4,12 @@ import 'package:animations/animations.dart';
 import 'package:animator/animator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:provider/provider.dart';
 
 import 'controller.dart';
 import 'http/webclient.dart';
-import 'main.dart';
+
 import 'models/hora.dart';
-import 'models/linhas.dart';
 
 int tempo1 = 1000;
 int tempo2 = tempo1 + 1000;
@@ -206,31 +206,33 @@ class ListaBox extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Container(
                 color: Colors.white,
-                child: TextField(
-                  textInputAction: TextInputAction.go,
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(24.0),
-                    border: OutlineInputBorder(),
-                    labelText: 'Busca...',
-                  ),
-                  textAlign: TextAlign.center,
-                  controller: myController,
-                  onChanged: (value) {
-                    busca = value;
-                  },
-                  onSubmitted: (value) {
-                    busca = value;
-                    Timer(Duration(seconds: 1), () {
-                      controller.increment();
-                      /* if (busca != '') {
-                        setState(() {
-                          // MaterialPageRoute(builder: (context) => newLista());
-                        });
-                      } else {
+                child: Center(
+                  child: TextField(
+                    textInputAction: TextInputAction.go,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(24.0),
+                      border: OutlineInputBorder(),
+                      labelText: 'Busca...',
+                    ),
+                    controller: myController,
+                    onChanged: (value) {
+                      busca = value;
+                    },
+                    onSubmitted: (value) {
+                      busca = value;
+                      Timer(Duration(seconds: 1), () {
                         controller.increment();
-                      } */
-                    });
-                  },
+                        /* if (busca != '') {
+                          setState(() {
+                            // MaterialPageRoute(builder: (context) => newLista());
+                          });
+                        } else {
+                          controller.increment();
+                        } */
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
@@ -247,7 +249,15 @@ class itemBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // if (linha.linha.toLowerCase().toString().contains(busca.toLowerCase())) {
-    return OpenContainer(
+    return InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (BuildContext context) => page(linha)));
+        },
+        child: itemLista(linha));
+    /*OpenContainer(
       closedColor: Colors.transparent,
       closedElevation: 0.0,
       closedBuilder: (BuildContext context, void Function() action) =>
@@ -256,7 +266,7 @@ class itemBox extends StatelessWidget {
           (BuildContext context, void Function({Object returnValue}) action) {
         return page(linha);
       },
-    );
+    );*/
     /* } else {
       return Container();
     }*/
@@ -327,54 +337,61 @@ class page extends StatelessWidget {
   page(this.linha);
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [Colors.blue, Colors.red]),
+    final controller = Provider.of<Controller>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Linha ${linha.linha}'),
       ),
-      child: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Container(
-              height: MediaQuery.of(context).size.height - 140,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black38,
-                    blurRadius: 5.0, // soften the shadow
-                    spreadRadius: 1.0, //extend the shadow
-                    offset: Offset(0.0, 10.0),
-                  )
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ListagemHorarios(this.linha),
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: Container(
-              color: Colors.black12,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Voltar',
-                  style: TextStyle(color: Colors.white),
+      body: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [Colors.blue, Colors.red]),
+        ),
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Container(
+                height: MediaQuery.of(context).size.height - 180,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black38,
+                      blurRadius: 5.0, // soften the shadow
+                      spreadRadius: 1.0, //extend the shadow
+                      offset: Offset(0.0, 10.0),
+                    )
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ListagemHorarios(this.linha, controller),
                 ),
               ),
             ),
-          ),
-        ],
+            /*InkWell(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Container(
+                color: Colors.black12,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Voltar',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),*/
+          ],
+        ),
       ),
     );
   }
@@ -382,12 +399,13 @@ class page extends StatelessWidget {
 
 class ListagemHorarios extends StatelessWidget {
   final Hora linha;
-  ListagemHorarios(this.linha);
+  final Controller controller;
+  ListagemHorarios(this.linha, this.controller);
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Hora>>(
         future: Future.delayed(Duration(milliseconds: tempo2))
-            .then((value) => findHours(linha)),
+            .then((value) => findHours(linha, controller)),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
