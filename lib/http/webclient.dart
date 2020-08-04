@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:http/http.dart';
 import 'package:http_interceptor/http_interceptor.dart';
@@ -59,8 +60,48 @@ Future<List<Hora>> findLinhas(Controller controller, String txt) async {
     List<Hora> lista = controller.lista;
     return await filtra(lista, txt);
   } else {
+    try {
+      final Response response = await client
+          .get('http://jocelidevops.000webhostapp.com/api/linhas.php')
+          .timeout(const Duration(seconds: 5));
+
+      print('STATUS ${response.statusCode}');
+
+      final List<dynamic> fromJson = jsonDecode(response.body);
+      final List<Hora> lista = List();
+
+      for (Map<String, dynamic> element in fromJson) {
+        final Hora hora = Hora(
+          id: element['id'],
+          linha: element['linha'],
+          horarioLargada: element['horario_largada'],
+          sigla: element['sigla'],
+          sentido: element['sentido'],
+        );
+
+        lista.add(hora);
+        controller.lista.add(hora);
+      }
+
+      return await filtra(lista, txt);
+    } on TimeoutException catch (e) {
+      print('Timeout');
+      final List<Hora> lista = List();
+      return lista;
+    } on Error catch (e) {
+      print('Error: $e');
+      final List<Hora> lista = List();
+      return lista;
+    }
+  }
+}
+
+Future<List<Hora>> findHours(Hora linha) async {
+  try {
     final Response response = await client
-        .get('http://jocelidevops.000webhostapp.com/api/linhas.php');
+        .get(
+            'http://jocelidevops.000webhostapp.com/api/index.php?linha=${linha.linha}&sentido=${linha.sentido}')
+        .timeout(const Duration(seconds: 5));
 
     final List<dynamic> fromJson = jsonDecode(response.body);
     final List<Hora> lista = List();
@@ -75,31 +116,16 @@ Future<List<Hora>> findLinhas(Controller controller, String txt) async {
       );
 
       lista.add(hora);
-      controller.lista.add(hora);
     }
 
-    return await filtra(lista, txt);
+    return lista;
+  } on TimeoutException catch (e) {
+    print('Timeout');
+    final List<Hora> lista = List();
+    return lista;
+  } on Error catch (e) {
+    print('Error: $e');
+    final List<Hora> lista = List();
+    return lista;
   }
-}
-
-Future<List<Hora>> findHours(Hora linha) async {
-  final Response response = await client.get(
-      'http://jocelidevops.000webhostapp.com/api/index.php?linha=${linha.linha}&sentido=${linha.sentido}');
-
-  final List<dynamic> fromJson = jsonDecode(response.body);
-  final List<Hora> lista = List();
-
-  for (Map<String, dynamic> element in fromJson) {
-    final Hora hora = Hora(
-      id: element['id'],
-      linha: element['linha'],
-      horarioLargada: element['horario_largada'],
-      sigla: element['sigla'],
-      sentido: element['sentido'],
-    );
-
-    lista.add(hora);
-  }
-
-  return lista;
 }

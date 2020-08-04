@@ -87,7 +87,7 @@ class newLista extends StatelessWidget {
             width: MediaQuery.of(context).size.width,
             child: Observer(
               builder: (_) {
-                print('rea ${controller.counter} ${tempo2}');
+                print('rea ${controller.counter} $tempo2');
 
                 if (controller.counter > 1) {
                   tempo2 = 500;
@@ -407,21 +407,28 @@ class ListagemHorarios extends StatelessWidget {
 
             case ConnectionState.done:
               final List<Hora> lista = snapshot.data;
-              return GridView.count(
-                primary: true,
-                crossAxisCount: 3,
-                childAspectRatio: 1.5,
-                children: List.generate(lista.length, (index) {
-                  final Hora hora = lista[index];
-                  return Chip(
-                    label: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(hora.horarioLargada),
-                    ),
-                  );
-                }),
-              );
-              /*ListView.builder(
+
+              if (lista.length <= 0) {
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(child: notFound()),
+                );
+              } else {
+                return GridView.count(
+                  primary: true,
+                  crossAxisCount: 3,
+                  childAspectRatio: 1.5,
+                  children: List.generate(lista.length, (index) {
+                    final Hora hora = lista[index];
+                    return Chip(
+                      label: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(hora.horarioLargada),
+                      ),
+                    );
+                  }),
+                );
+                /*ListView.builder(
                   itemCount: lista.length,
                   itemBuilder: (context, index) {
                     final Hora hora = lista[index];
@@ -429,7 +436,7 @@ class ListagemHorarios extends StatelessWidget {
                       label: Text(hora.horarioLargada),
                     );
                   });*/
-
+              }
               break;
           }
         });
@@ -444,7 +451,7 @@ class notFound extends StatelessWidget {
         child: Column(
           children: <Widget>[
             Text(
-              '${busca}',
+              '$busca',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Text('Nenhum resultado localizado!'),
